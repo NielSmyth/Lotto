@@ -4,8 +4,8 @@ import { usePathname } from "next/navigation";
 import {
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { Users, BotMessageSquare } from "lucide-react";
 import Link from "next/link";
 
