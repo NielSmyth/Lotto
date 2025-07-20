@@ -23,38 +23,38 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from "lucide-react";
+import { getApplicationStatus } from "@/ai/flows/get-status";
+import type { GetApplicationStatusOutput } from "@/ai/flows/get-status";
+import { useToast } from "@/hooks/use-toast";
+
 
 const formSchema = z.object({
   applicationId: z.string().min(1, "Application ID is required."),
 });
 
-type Status = "Received" | "Processing" | "Winner" | "Not a Winner" | "Invalid";
 
-interface StatusResult {
-  status: Status;
-  id: string;
-  date: string;
-}
+const StatusInfo = ({ result }: { result: GetApplicationStatusOutput }) => {
+    if (!result.found) {
+        return (
+            <Card className="mt-6 animate-in fade-in-50 border-yellow-500 bg-yellow-500/10">
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                    <AlertCircle className="h-10 w-10 text-yellow-600" />
+                    <div>
+                        <CardTitle className="font-headline text-yellow-800">Status: Invalid ID</CardTitle>
+                        <CardDescription>Application ID: {result.id}</CardDescription>
+                    </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                    We could not find an application with this ID. Please check the ID and try again.
+                    </p>
+                </CardContent>
+            </Card>
+        )
+    }
 
-const mockData: { [key: string]: StatusResult } = {
-  "LOTTO-123456": {
-    status: "Winner",
-    id: "LOTTO-123456",
-    date: "2023-10-26",
-  },
-  "LOTTO-789012": {
-    status: "Processing",
-    id: "LOTTO-789012",
-    date: "2023-10-25",
-  },
-  "LOTTO-345678": {
-    status: "Not a Winner",
-    id: "LOTTO-345678",
-    date: "2023-10-26",
-  },
-};
-
-const StatusInfo = ({ result }: { result: StatusResult }) => {
   const getIcon = () => {
     switch (result.status) {
       case "Winner":
@@ -83,7 +83,7 @@ const StatusInfo = ({ result }: { result: StatusResult }) => {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          Result as of: {new Date(result.date).toLocaleDateString()}
+          Result as of: {new Date(result.submissionDate!).toLocaleDateString()}
         </p>
       </CardContent>
     </Card>
@@ -92,22 +92,30 @@ const StatusInfo = ({ result }: { result: StatusResult }) => {
 
 export default function StatusForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [statusResult, setStatusResult] = useState<StatusResult | null>(null);
+  const [statusResult, setStatusResult] = useState<GetApplicationStatusOutput | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { applicationId: "" },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setStatusResult(null);
-    setTimeout(() => {
-      const id = values.applicationId.toUpperCase();
-      const result = mockData[id] || { status: "Invalid", id: values.applicationId, date: new Date().toISOString() };
-      setStatusResult(result);
-      setIsLoading(false);
-    }, 1500);
+    try {
+        const result = await getApplicationStatus({ applicationId: values.applicationId });
+        setStatusResult(result);
+    } catch (error) {
+        console.error("Failed to get status:", error);
+        toast({
+            variant: "destructive",
+            title: "An error occurred",
+            description: "Failed to retrieve application status. Please try again.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -123,7 +131,7 @@ export default function StatusForm() {
                   <FormItem>
                     <FormLabel>Application ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., LOTTO-123456" {...field} />
+                      <Input placeholder="e.g., APP-123456" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
