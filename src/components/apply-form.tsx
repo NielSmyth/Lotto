@@ -25,6 +25,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, CreditCard, User, Loader2 } from "lucide-react";
+import { submitApplication } from "@/ai/flows/submit-application";
+import { useToast } from "@/hooks/use-toast";
 
 const personalInfoSchema = z.object({
   fullName: z.string().min(2, { message: "Full name must be at least 2 characters." }),
@@ -44,7 +46,8 @@ const formSchema = personalInfoSchema.merge(paymentSchema);
 export default function ApplyForm() {
   const [activeTab, setActiveTab] = useState("personal");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<{ id: string; success: boolean } | null>(null);
+  const [submissionResult, setSubmissionResult] = useState<{ id: string } | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,24 +69,27 @@ export default function ApplyForm() {
     }
   }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      const success = Math.random() > 0.1; // 90% success rate
-      if (success) {
-        const applicationId = `Lotto-${Math.floor(100000 + Math.random() * 900000)}`;
-        setSubmissionResult({ id: applicationId, success: true });
-        form.reset();
-      } else {
-        setSubmissionResult({ id: "Failed", success: false });
-      }
-      setIsSubmitting(false);
+    setSubmissionResult(null);
+    try {
+      const result = await submitApplication(values);
+      setSubmissionResult({ id: result.applicationId });
+      form.reset();
       setActiveTab("personal");
-    }, 2000);
+    } catch (error) {
+      console.error("Submission failed:", error);
+      toast({
+        variant: "destructive",
+        title: "An error occurred",
+        description: "Failed to submit application. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
-  if (submissionResult?.success) {
+  if (submissionResult?.id) {
     return (
       <Alert variant="default" className="bg-accent/10 border-accent text-accent-foreground">
         <CheckCircle className="h-4 w-4 !text-accent" />
