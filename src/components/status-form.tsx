@@ -20,6 +20,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from "lucide-react";
 
