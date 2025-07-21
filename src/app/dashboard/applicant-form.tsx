@@ -1,6 +1,6 @@
 'use client'
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ interface ApplicantFormProps {
 }
 
 export function ApplicantForm({ applicant, onFinished }: ApplicantFormProps) {
-    const [state, formAction] = useFormState(upsertApplicantAction, { success: false });
+    const [state, formAction] = useActionState(upsertApplicantAction, { success: false });
     const { toast } = useToast();
 
     useEffect(() => {

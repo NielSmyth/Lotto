@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,7 +17,7 @@ import { Label } from './ui/label';
 
 
 export default function LoginForm() {
-    const [state, formAction] = useFormState(login, undefined);
+    const [state, formAction] = useActionState(login, undefined);
 
   return (
     <Card className="w-full shadow-lg">
