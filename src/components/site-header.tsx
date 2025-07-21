@@ -3,10 +3,11 @@ import { TicketIcon, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { getSession } from "@/lib/session";
+import { logout } from "@/lib/auth";
 
-export default function SiteHeader() {
-  // Mock user state
-  const isLoggedIn = true; 
+export default async function SiteHeader() {
+  const session = await getSession();
 
   return (
     <header className="px-4 lg:px-6 h-16 flex items-center bg-card border-b">
@@ -26,7 +27,7 @@ export default function SiteHeader() {
           </Link>
         </Button>
         
-        {isLoggedIn ? (
+        {session ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full">
@@ -40,20 +41,33 @@ export default function SiteHeader() {
               <DropdownMenuItem asChild>
                 <Link href="/my-applications">My Applications</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              
+              {session.role === 'ADMIN' && (
+                 <DropdownMenuItem asChild>
+                    <Link href="/dashboard">Staff Dashboard</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
                <DropdownMenuItem>
-                  <Link href="/dashboard">Staff Dashboard</Link>
+                  <form action={logout}>
+                    <button type="submit" className="w-full text-left">Logout</button>
+                  </form>
               </DropdownMenuItem>
-              <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button variant="outline" asChild>
-            <Link href="/login" className="text-sm font-medium" prefetch={false}>
-              Login
-            </Link>
-          </Button>
+          <>
+            <Button variant="outline" asChild>
+              <Link href="/login" className="text-sm font-medium" prefetch={false}>
+                Login
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/signup" className="text-sm font-medium" prefetch={false}>
+                Sign Up
+              </Link>
+            </Button>
+          </>
         )}
         
         <ThemeToggle />

@@ -1,16 +1,19 @@
 import SiteHeader from "@/components/site-header";
-import { Applicant } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ApplicantsTable from "@/components/applicants-table";
 import { Ticket } from "lucide-react";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { dbService } from "@/lib/db";
 
-// In a real app, you'd fetch this based on the logged-in user
-const mockUserApplications: Applicant[] = [
-    { id: "APP-001", name: "Alice Johnson", email: "alice@example.com", submissionDate: "2024-05-20", paymentStatus: "Paid", status: "Winner" },
-    { id: "APP-008", name: "Alice Johnson", email: "alice@example.com", submissionDate: "2024-04-15", paymentStatus: "Paid", status: "Not a Winner" },
-];
+export default async function MyApplicationsPage() {
+  const session = await getSession();
+  if (!session?.userId) {
+    redirect('/login');
+  }
 
-export default function MyApplicationsPage() {
+  const userApplications = await dbService.getApplicantsByUserId(session.userId);
+
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
@@ -30,7 +33,7 @@ export default function MyApplicationsPage() {
                     <CardDescription>Here are all the applications you have submitted.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ApplicantsTable applicants={mockUserApplications} />
+                    <ApplicantsTable applicants={userApplications} />
                 </CardContent>
             </Card>
           </div>

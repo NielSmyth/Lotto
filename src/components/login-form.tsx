@@ -1,9 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useState } from "react";
+import { useFormState } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -22,81 +19,39 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useForm } from 'react-hook-form';
+import { login } from '@/lib/auth';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
-
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
-});
 
 export default function LoginForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    // In a real app, you would call your auth service here.
-    // We'll simulate a successful login.
-    setTimeout(() => {
-        toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-        });
-        router.push('/my-applications');
-        setIsSubmitting(false);
-    }, 1000);
-  }
+    const [state, formAction] = useFormState(login, undefined);
 
   return (
     <Card className="w-full shadow-lg">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form action={formAction}>
             <CardHeader>
                 <CardTitle>Welcome Back</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Email Address</FormLabel>
-                    <FormControl>
-                        <Input type="email" placeholder="john.doe@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+                 <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" name="email" type="email" placeholder="john.doe@example.com" required />
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" name="password" type="password" placeholder="••••••••" required />
+                 </div>
+                 {state?.error && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Login Failed</AlertTitle>
+                        <AlertDescription>{state.error}</AlertDescription>
+                    </Alert>
+                 )}
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button type="submit" className="w-full">
                   Login
                 </Button>
                 <p className="text-xs text-muted-foreground">
@@ -104,7 +59,6 @@ export default function LoginForm() {
                 </p>
             </CardFooter>
         </form>
-      </Form>
     </Card>
   );
 }

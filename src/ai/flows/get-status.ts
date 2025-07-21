@@ -9,7 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+import { dbService } from '@/lib/db';
 
 const GetApplicationStatusInputSchema = z.object({
   applicationId: z.string().describe('The unique ID of the application.'),
@@ -37,7 +37,7 @@ const getApplicationStatusFlow = ai.defineFlow(
     outputSchema: GetApplicationStatusOutputSchema,
   },
   async (input) => {
-    const applicant = await db.getApplicant(input.applicationId);
+    const applicant = await dbService.getApplicant(input.applicationId);
 
     if (!applicant) {
       return {

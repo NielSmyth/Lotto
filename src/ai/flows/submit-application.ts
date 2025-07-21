@@ -9,7 +9,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { db } from '@/lib/db';
+import { dbService } from '@/lib/db';
+import { getSession } from '@/lib/session';
 
 const SubmitApplicationInputSchema = z.object({
   fullName: z.string().describe('The full name of the applicant.'),
@@ -43,10 +44,12 @@ const submitApplicationFlow = ai.defineFlow(
   async (input) => {
     // In a real application, you would process the payment here.
     // For this demo, we'll just create the applicant record.
+    const session = await getSession();
 
-    const applicant = await db.createApplicant({
+    const applicant = await dbService.createApplicant({
       fullName: input.fullName,
       email: input.email,
+      userId: session?.userId
     });
 
     return {

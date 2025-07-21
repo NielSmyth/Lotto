@@ -1,3 +1,5 @@
+export type UserRole = 'USER' | 'ADMIN';
+
 export type Applicant = {
   id: string;
   name: string;
@@ -5,12 +7,19 @@ export type Applicant = {
   submissionDate: string;
   paymentStatus: 'Paid' | 'Pending' | 'Failed';
   status: 'Received' | 'Processing' | 'Winner' | 'Not a Winner';
-  userId?: string;
+  userId?: number;
 };
 
 export type User = {
-    id: string;
+    id: number;
     fullName: string;
     email: string;
-    passwordHash: string; // In a real app, never store plain text passwords
+    passwordHash: string;
+    role: UserRole;
+}
+
+export type SessionPayload = {
+  userId: number;
+  role: UserRole;
+  expires: Date;
 }
