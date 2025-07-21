@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from '@/components/theme-provider';
+import SiteHeader from '@/components/site-header';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'LottoLink',
@@ -28,9 +30,7 @@ export default function RootLayout({
             disableTransitionOnChange
         >
             <div className="flex flex-col min-h-screen">
-            <main className="flex-grow">
                 {children}
-            </main>
             </div>
             <Toaster />
         </ThemeProvider>

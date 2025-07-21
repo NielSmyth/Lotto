@@ -15,7 +15,7 @@ export default async function MyApplicationsPage() {
   const userApplications = await dbService.getApplicantsByUserId(session.userId);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <>
       <SiteHeader />
       <main className="flex-1 py-12 md:py-24">
         <div className="container">
@@ -39,6 +39,6 @@ export default async function MyApplicationsPage() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }

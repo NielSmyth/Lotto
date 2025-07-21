@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Edit, ShieldCheck, TicketIcon } from "lucide-react";
+import { CheckCircle, Edit, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <>
       <SiteHeader />
       <main className="flex-1">
         <section className="w-full py-20 md:py-32 lg:py-40 bg-card">
@@ -92,6 +92,6 @@ export default function Home() {
           </Link>
         </nav>
       </footer>
-    </div>
+    </>
   );
 }

@@ -4,7 +4,7 @@ import { LogIn } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <>
       <SiteHeader />
       <main className="flex-1 py-12 md:py-24">
         <div className="container">
@@ -18,6 +18,6 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }
