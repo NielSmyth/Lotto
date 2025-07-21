@@ -11,7 +11,7 @@ const applicantSchema = z.object({
     status: z.enum(['Received', 'Processing', 'Winner', 'Not a Winner'])
 });
 
-export async function upsertApplicantAction(formData: FormData) {
+export async function upsertApplicantAction(prevState: any, formData: FormData) {
     const parsed = applicantSchema.safeParse(Object.fromEntries(formData));
 
     if (!parsed.success) {

@@ -21,7 +21,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
   return password === hash;
 }
 
-export async function login(formData: FormData) {
+export async function login(prevState: any, formData: FormData) {
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
@@ -44,7 +44,7 @@ export async function login(formData: FormData) {
   }
 }
 
-export async function signup(formData: FormData) {
+export async function signup(prevState: any, formData: FormData) {
   const parsed = signupSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
