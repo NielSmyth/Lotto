@@ -2,9 +2,6 @@ import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import type { SessionPayload } from './types';
-import { config } from 'dotenv';
-
-config();
 
 const secretKey = process.env.SESSION_SECRET || 'your-super-secret-key-that-is-at-least-32-characters-long';
 const key = new TextEncoder().encode(secretKey);

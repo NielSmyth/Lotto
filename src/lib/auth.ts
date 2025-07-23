@@ -4,6 +4,9 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createSession, deleteSession } from './session';
 import { dbService } from './db';
+import { config } from 'dotenv';
+
+config();
 
 const loginSchema = z.object({
   email: z.string().email(),
