@@ -15,8 +15,8 @@ import { useState } from "react";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { deleteApplicantAction, upsertApplicantAction } from "@/app/dashboard/actions";
-import { useToast } from "./ui/use-toast";
+import { deleteApplicantAction } from "@/app/dashboard/actions";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { ApplicantForm } from "@/app/dashboard/applicant-form";
 
@@ -29,6 +29,7 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
     const [filter, setFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set(['Paid', 'Pending', 'Failed']));
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedApplicant, setSelectedApplicant] = useState<Applicant | undefined>(undefined);
     const { toast } = useToast();
 
     const toggleStatusFilter = (status: string) => {
@@ -41,6 +42,16 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
             }
             return newSet;
         });
+    }
+    
+    const handleEditClick = (applicant: Applicant) => {
+        setSelectedApplicant(applicant);
+        setIsFormOpen(true);
+    };
+
+    const handleAddClick = () => {
+        setSelectedApplicant(undefined);
+        setIsFormOpen(true);
     }
 
     const filteredApplicants = applicants.filter(applicant =>
@@ -119,9 +130,7 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
                 </DropdownMenuContent>
             </DropdownMenu>
              {isAdmin && (
-                <DialogTrigger asChild>
-                    <Button>Add Applicant</Button>
-                </DialogTrigger>
+                <Button onClick={handleAddClick}>Add Applicant</Button>
             )}
         </div>
         <div className="rounded-md border">
@@ -165,12 +174,10 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DialogTrigger asChild>
-                                        <DropdownMenuItem>
-                                            <Pencil className="mr-2 h-4 w-4" />
-                                            Edit
-                                        </DropdownMenuItem>
-                                    </DialogTrigger>
+                                    <DropdownMenuItem onClick={() => handleEditClick(applicant)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleDelete(applicant.id)} className="text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4" />
@@ -178,15 +185,6 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                             <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Edit Applicant</DialogTitle>
-                                    <DialogDescription>
-                                        Update the applicant's details below.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <ApplicantForm applicant={applicant} onFinished={() => setIsFormOpen(false)} />
-                            </DialogContent>
                         </TableCell>
                     )}
                 </TableRow>
@@ -203,12 +201,12 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
         </div>
          <DialogContent>
             <DialogHeader>
-                <DialogTitle>Add New Applicant</DialogTitle>
+                <DialogTitle>{selectedApplicant ? 'Edit Applicant' : 'Add New Applicant'}</DialogTitle>
                 <DialogDescription>
-                    Fill out the form below to add a new applicant.
+                    {selectedApplicant ? "Update the applicant's details below." : "Fill out the form below to add a new applicant."}
                 </DialogDescription>
             </DialogHeader>
-            <ApplicantForm onFinished={() => setIsFormOpen(false)} />
+            <ApplicantForm applicant={selectedApplicant} onFinished={() => setIsFormOpen(false)} />
         </DialogContent>
     </div>
     </Dialog>
