@@ -3,11 +3,17 @@ import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
 
 const protectedRoutes = ['/dashboard', '/my-applications', '/apply'];
-const publicRoutes = ['/login', '/signup', '/'];
+const publicRoutes = ['/login', '/signup', '/', '/status'];
 const adminRoutes = ['/dashboard'];
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+
+  // Check if the route is public
+  const isPublicRoute = publicRoutes.some((route) => path === route);
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route));
