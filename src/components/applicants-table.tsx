@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { deleteApplicantAction } from "@/app/dashboard/actions";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { ApplicantForm } from "@/app/dashboard/applicant-form";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 
 interface ApplicantsTableProps {
   applicants: Applicant[];
@@ -90,19 +91,17 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this applicant?")) {
-        const result = await deleteApplicantAction(id);
-        if (result.success) {
-            toast({ title: "Success", description: "Applicant deleted successfully." });
-        } else {
-            toast({ variant: "destructive", title: "Error", description: result.error });
-        }
+    const result = await deleteApplicantAction(id);
+    if (result.success) {
+        toast({ title: "Success", description: "Applicant deleted successfully." });
+    } else {
+        toast({ variant: "destructive", title: "Error", description: result.error });
     }
   }
 
   return (
+    <>
     <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-    <div>
         <div className="flex items-center py-4 gap-4">
             <Input
                 placeholder="Filter by name, email, or ID..."
@@ -166,25 +165,42 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
                     </TableCell>
                     {isAdmin && (
                         <TableCell>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <span className="sr-only">Open menu</span>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditClick(applicant)}>
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleDelete(applicant.id)} className="text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <AlertDialog>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleEditClick(applicant)}>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem className="text-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the applicant
+                                            and remove their data from our servers.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(applicant.id)}>Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </TableCell>
                     )}
                 </TableRow>
@@ -208,7 +224,7 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
             </DialogHeader>
             <ApplicantForm applicant={selectedApplicant} onFinished={() => setIsFormOpen(false)} />
         </DialogContent>
-    </div>
     </Dialog>
+    </>
   );
 }
