@@ -10,7 +10,7 @@ export async function encrypt(payload: any) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h') // Token expires in 1 hour
+    .setExpirationTime('24h') // Token expires in 24 hours
     .sign(key);
 }
 
@@ -22,13 +22,14 @@ export async function decrypt(session: string | undefined = ''): Promise<Session
     });
     return payload as SessionPayload;
   } catch (error) {
-    console.error('Failed to verify session:', error);
+    // Clear invalid session cookie
+    cookies().delete('session');
     return null;
   }
 }
 
 export async function createSession(userId: number, role: 'USER' | 'ADMIN') {
-  const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
   const session = await encrypt({ userId, role, expires });
 
   cookies().set('session', session, {

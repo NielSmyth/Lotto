@@ -20,17 +20,32 @@ export async function middleware(req: NextRequest) {
   const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
 
   if (isProtectedRoute || isAdminRoute) {
-    const cookie = cookies().get('session')?.value;
-    const session = await decrypt(cookie);
+    try {
+      const cookie = cookies().get('session')?.value;
+      const session = await decrypt(cookie);
 
-    // Redirect to login if no session
-    if (!session?.userId) {
+      // Redirect to login if no session
+      if (!session?.userId) {
+        return NextResponse.redirect(new URL('/login', req.nextUrl));
+      }
+
+      // Refresh session if it expires within 2 hours
+      const expiresAt = new Date(session.expires);
+      const now = new Date();
+      const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      
+      if (expiresAt < twoHoursFromNow) {
+        const { createSession } = await import('@/lib/session');
+        await createSession(session.userId, session.role);
+      }
+
+      // Redirect non-admins away from admin routes
+      if (isAdminRoute && session.role !== 'ADMIN') {
+          return NextResponse.redirect(new URL('/my-applications', req.nextUrl));
+      }
+    } catch (error) {
+      // If session verification fails, redirect to login
       return NextResponse.redirect(new URL('/login', req.nextUrl));
-    }
-
-    // Redirect non-admins away from admin routes
-    if (isAdminRoute && session.role !== 'ADMIN') {
-        return NextResponse.redirect(new URL('/my-applications', req.nextUrl));
     }
   }
 
