@@ -23,10 +23,10 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="font-semibold">
-                  <Link href="/apply">Apply Now</Link>
+                  <Link href="/login">Apply Now</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="font-semibold">
-                  <Link href="/status">Check Status</Link>
+                  <Link href="/login">Check Status</Link>
                 </Button>
               </div>
             </div>
