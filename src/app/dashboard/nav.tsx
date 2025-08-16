@@ -6,7 +6,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Users, BotMessageSquare } from "lucide-react";
+import { Users } from "lucide-react";
 import Link from "next/link";
 
 export function DashboardNav() {
@@ -18,12 +18,6 @@ export function DashboardNav() {
       label: "Applicants",
       icon: Users,
       isActive: pathname === "/dashboard",
-    },
-    {
-      href: "/dashboard/process-results",
-      label: "AI Result Processor",
-      icon: BotMessageSquare,
-      isActive: pathname === "/dashboard/process-results",
     },
   ];
 

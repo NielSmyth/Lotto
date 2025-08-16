@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,17 +23,21 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from "lucide-react";
-import { getApplicationStatus } from "@/ai/flows/get-status";
-import type { GetApplicationStatusOutput } from "@/ai/flows/get-status";
+import { getApplicationStatusAction } from "@/app/status/actions";
 import { useToast } from "@/hooks/use-toast";
-
 
 const formSchema = z.object({
   applicationId: z.string().min(1, "Application ID is required."),
 });
 
+type StatusResult = {
+    id: string;
+    found: boolean;
+    status?: 'Received' | 'Processing' | 'Winner' | 'Not a Winner';
+    submissionDate?: string;
+}
 
-const StatusInfo = ({ result }: { result: GetApplicationStatusOutput }) => {
+const StatusInfo = ({ result }: { result: StatusResult }) => {
     if (!result.found) {
         return (
             <Card className="mt-6 animate-in fade-in-50 border-yellow-500 bg-yellow-500/10">
@@ -91,8 +95,7 @@ const StatusInfo = ({ result }: { result: GetApplicationStatusOutput }) => {
 };
 
 export default function StatusForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [statusResult, setStatusResult] = useState<GetApplicationStatusOutput | null>(null);
+  const [state, formAction, isPending] = useActionState(getApplicationStatusAction, { success: false });
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -100,29 +103,21 @@ export default function StatusForm() {
     defaultValues: { applicationId: "" },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    setStatusResult(null);
-    try {
-        const result = await getApplicationStatus({ applicationId: values.applicationId });
-        setStatusResult(result);
-    } catch (error) {
-        console.error("Failed to get status:", error);
+  useEffect(() => {
+    if (state.error) {
         toast({
             variant: "destructive",
             title: "An error occurred",
-            description: "Failed to retrieve application status. Please try again.",
+            description: state.error,
         });
-    } finally {
-        setIsLoading(false);
     }
-  }
+  }, [state, toast])
 
   return (
     <>
       <Card className="shadow-lg">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form action={formAction}>
             <CardContent className="pt-6">
               <FormField
                 control={form.control}
@@ -139,15 +134,15 @@ export default function StatusForm() {
               />
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Check Status
               </Button>
             </CardFooter>
           </form>
         </Form>
       </Card>
-      {statusResult && <StatusInfo result={statusResult} />}
+      {state.success && state.result && <StatusInfo result={state.result as StatusResult} />}
     </>
   );
 }

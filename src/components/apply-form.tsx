@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -25,7 +25,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, CreditCard, User, Loader2 } from "lucide-react";
-import { submitApplication } from "@/ai/flows/submit-application";
+import { submitApplicationAction } from "@/app/apply/actions";
 import { useToast } from "@/hooks/use-toast";
 
 const personalInfoSchema = z.object({
@@ -46,7 +46,8 @@ const formSchema = personalInfoSchema.merge(paymentSchema);
 export default function ApplyForm() {
   const [activeTab, setActiveTab] = useState("personal");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<{ id: string } | null>(null);
+  
+  const [state, formAction, isPending] = useActionState(submitApplicationAction, { success: false });
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,6 +63,21 @@ export default function ApplyForm() {
     },
   });
 
+  useEffect(() => {
+    if (state.success) {
+        form.reset();
+        setActiveTab("personal");
+    }
+    if (state.error) {
+        toast({
+            variant: "destructive",
+            title: "An error occurred",
+            description: "Failed to submit application. Please try again.",
+        });
+    }
+  }, [state, form, toast]);
+
+
   async function handleNext() {
     const isValid = await form.trigger(["fullName", "email", "phone"]);
     if (isValid) {
@@ -69,34 +85,14 @@ export default function ApplyForm() {
     }
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    setSubmissionResult(null);
-    try {
-      const result = await submitApplication(values);
-      setSubmissionResult({ id: result.applicationId });
-      form.reset();
-      setActiveTab("personal");
-    } catch (error) {
-      console.error("Submission failed:", error);
-      toast({
-        variant: "destructive",
-        title: "An error occurred",
-        description: "Failed to submit application. Please try again.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  if (submissionResult?.id) {
+  if (state.success && state.applicationId) {
     return (
       <Alert variant="default" className="bg-accent/10 border-accent text-accent-foreground">
         <CheckCircle className="h-4 w-4 !text-accent" />
         <AlertTitle className="font-headline">Application Submitted!</AlertTitle>
         <AlertDescription>
           Your lottery application has been successfully submitted. Your Application ID is{" "}
-          <strong className="font-mono">{submissionResult.id}</strong>. Please save this for your records.
+          <strong className="font-mono">{state.applicationId}</strong>. Please save this for your records.
         </AlertDescription>
       </Alert>
     );
@@ -105,7 +101,7 @@ export default function ApplyForm() {
   return (
     <Card className="w-full shadow-lg">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form action={formAction}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <CardHeader>
               <TabsList className="grid w-full grid-cols-2">
@@ -234,8 +230,8 @@ export default function ApplyForm() {
                 <Button type="button" variant="outline" onClick={() => setActiveTab("personal")}>
                   Back
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Submit Application
                 </Button>
               </CardFooter>
