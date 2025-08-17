@@ -23,3 +23,14 @@ export type SessionPayload = {
   role: UserRole;
   expires: Date;
 }
+
+export type DashboardStats = {
+  totalApplicants: number;
+  totalWinners: number;
+  processingApplicants: number;
+}
+
+export type ApplicationsPerDay = {
+  date: string;
+  count: number;
+}

@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import type { Applicant, User, UserRole } from './types';
+import type { Applicant, User, DashboardStats, ApplicationsPerDay } from './types';
 
 const db = new Database('lottolink.db');
 
@@ -107,5 +107,29 @@ export const dbService = {
     const stmt = db.prepare('DELETE FROM applicants WHERE id = ?');
     const result = stmt.run(id);
     return { success: result.changes > 0 };
+  },
+
+  // Dashboard methods
+  getDashboardStats: async (): Promise<DashboardStats> => {
+    const totalApplicants = db.prepare('SELECT COUNT(id) as count FROM applicants').get() as { count: number };
+    const totalWinners = db.prepare('SELECT COUNT(id) as count FROM applicants WHERE status = ?').get('Winner') as { count: number };
+    const processingApplicants = db.prepare('SELECT COUNT(id) as count FROM applicants WHERE status = ?').get('Processing') as { count: number };
+
+    return {
+      totalApplicants: totalApplicants.count,
+      totalWinners: totalWinners.count,
+      processingApplicants: processingApplicants.count,
+    }
+  },
+
+  getApplicationsPerDay: async (): Promise<ApplicationsPerDay[]> => {
+    const data = db.prepare(`
+      SELECT submissionDate as date, COUNT(id) as count 
+      FROM applicants 
+      GROUP BY submissionDate 
+      ORDER BY submissionDate ASC
+      LIMIT 30
+    `).all() as { date: string, count: number}[];
+    return data.map(d => ({...d, date: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}));
   }
 };
