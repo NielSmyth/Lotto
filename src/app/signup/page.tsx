@@ -5,7 +5,7 @@ import { UserPlus } from "lucide-react";
 export default function SignupPage() {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader hideNavLinks />
       <main className="flex-1 py-12 md:py-24">
         <div className="container">
           <div className="max-w-md mx-auto">

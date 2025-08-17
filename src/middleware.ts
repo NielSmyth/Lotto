@@ -8,30 +8,28 @@ const adminRoutes = ['/dashboard'];
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  const cookie = cookies().get('session')?.value;
+  const session = await decrypt(cookie);
 
-  // Check if the route is public
-  const isPublicRoute = publicRoutes.some((route) => path === route);
-  if (isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route));
   const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
+  const isPublicRoute = publicRoutes.includes(path);
 
   if (isProtectedRoute || isAdminRoute) {
-    const cookie = cookies().get('session')?.value;
-    const session = await decrypt(cookie);
-
-    // Redirect to login if no session
     if (!session?.userId) {
       return NextResponse.redirect(new URL('/login', req.nextUrl));
     }
-
-    // Redirect non-admins away from admin routes
     if (isAdminRoute && session.role !== 'ADMIN') {
-        return NextResponse.redirect(new URL('/my-applications', req.nextUrl));
+      return NextResponse.redirect(new URL('/my-applications', req.nextUrl));
     }
+  }
+
+  // Redirect logged-in users from auth pages to their respective dashboards
+  if (session?.userId && (path === '/login' || path === '/signup')) {
+    if(session.role === 'ADMIN') {
+      return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+    }
+    return NextResponse.redirect(new URL('/my-applications', req.nextUrl));
   }
 
   return NextResponse.next();

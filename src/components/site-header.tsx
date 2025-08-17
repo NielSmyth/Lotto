@@ -6,7 +6,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { getSession } from "@/lib/session";
 import { logout } from "@/lib/auth";
 
-export default async function SiteHeader() {
+interface SiteHeaderProps {
+  hideNavLinks?: boolean;
+}
+
+export default async function SiteHeader({ hideNavLinks = false }: SiteHeaderProps) {
   const session = await getSession();
 
   return (
@@ -16,16 +20,20 @@ export default async function SiteHeader() {
         <span className="ml-2 text-xl font-bold font-headline">LottoLink</span>
       </Link>
       <nav className="ml-auto flex gap-2 sm:gap-4 items-center">
-        <Button variant="ghost" asChild>
-          <Link href="/apply" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-            Apply
-          </Link>
-        </Button>
-        <Button variant="ghost" asChild>
-          <Link href="/status" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-            Check Status
-          </Link>
-        </Button>
+        {!hideNavLinks && (
+            <>
+            <Button variant="ghost" asChild>
+                <Link href="/apply" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+                    Apply
+                </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                <Link href="/status" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+                    Check Status
+                </Link>
+            </Button>
+          </>
+        )}
         
         {session ? (
           <DropdownMenu>
@@ -56,18 +64,20 @@ export default async function SiteHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <>
-            <Button variant="outline" asChild>
-              <Link href="/login" className="text-sm font-medium" prefetch={false}>
-                Login
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup" className="text-sm font-medium" prefetch={false}>
-                Sign Up
-              </Link>
-            </Button>
-          </>
+          !hideNavLinks && (
+            <>
+                <Button variant="outline" asChild>
+                <Link href="/login" className="text-sm font-medium" prefetch={false}>
+                    Login
+                </Link>
+                </Button>
+                <Button asChild>
+                <Link href="/signup" className="text-sm font-medium" prefetch={false}>
+                    Sign Up
+                </Link>
+                </Button>
+            </>
+          )
         )}
         
         <ThemeToggle />
