@@ -51,12 +51,12 @@ export default function DashboardLayout({
             </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="bg-background flex-1">
+        <SidebarInset className="bg-background flex-1 flex flex-col">
           <header className="flex items-center justify-between p-4 border-b">
              <SidebarTrigger className="md:hidden" />
              <h1 className="text-2xl font-bold font-headline hidden md:block">Staff Dashboard</h1>
           </header>
-          <main className="p-4 md:p-6">{children}</main>
+          <main className="p-4 md:p-6 flex-1 overflow-auto">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>
