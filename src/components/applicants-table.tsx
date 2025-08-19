@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Applicant } from "@/lib/types";
@@ -83,6 +84,8 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
     const [selectedApplicant, setSelectedApplicant] = useState<Applicant | undefined>(undefined);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [applicantToDelete, setApplicantToDelete] = useState<string | null>(null);
+    const [detailsApplicant, setDetailsApplicant] = useState<Applicant | undefined>(undefined);
+    
     const { toast } = useToast();
 
     const toggleStatusFilter = (status: string) => {
@@ -110,6 +113,12 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
     const handleDeleteClick = (id: string) => {
         setApplicantToDelete(id);
         setIsDeleteDialogOpen(true);
+    }
+    
+    const handleRowClick = (applicant: Applicant) => {
+      if (!isAdmin) {
+        setDetailsApplicant(applicant);
+      }
     }
 
     const filteredApplicants = applicants.filter(applicant =>
@@ -170,119 +179,6 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
   return (
     <>
     <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <div className="flex items-center py-4 gap-4">
-                <Input
-                    placeholder="Filter by name, email, or ID..."
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="max-w-sm"
-                />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
-                        Payment Status <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {['Paid', 'Pending', 'Failed'].map((status) => (
-                        <DropdownMenuCheckboxItem
-                            key={status}
-                            className="capitalize"
-                            checked={statusFilter.has(status)}
-                            onCheckedChange={() => toggleStatusFilter(status)}
-                        >
-                            {status}
-                        </DropdownMenuCheckboxItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                {isAdmin && (
-                    <Button onClick={handleAddClick}>Add Applicant</Button>
-                )}
-            </div>
-            <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Applicant ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Submission Date</TableHead>
-                    <TableHead>Lottery Status</TableHead>
-                    <TableHead className="text-right">Payment Status</TableHead>
-                    {isAdmin && <TableHead className="w-[50px]"></TableHead>}
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {filteredApplicants.length > 0 ? (
-                    filteredApplicants.map((applicant) => (
-                    <TableRow key={applicant.id}>
-                        <TableCell className="font-mono">{applicant.id}</TableCell>
-                        <TableCell className="font-medium">{applicant.name}</TableCell>
-                        <TableCell>{applicant.email}</TableCell>
-                        <TableCell>{new Date(applicant.submissionDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                            <Badge variant={getLotteryStatusVariant(applicant.status)} className="capitalize">
-                                {applicant.status}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                        <Badge variant={getStatusVariant(applicant.paymentStatus)} className="capitalize">
-                            {applicant.paymentStatus}
-                        </Badge>
-                        </TableCell>
-                        {isAdmin && (
-                            <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Open menu</span>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleEditClick(applicant)}>
-                                            <Pencil className="mr-2 h-4 w-4" />
-                                            Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(applicant.id)}>
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Delete
-                                            </DropdownMenuItem>
-                                        </AlertDialogTrigger>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        )}
-                    </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={isAdmin ? 7 : 6} className="h-48">
-                           <EmptyState />
-                        </TableCell>
-                    </TableRow>
-                )}
-                </TableBody>
-            </Table>
-            </div>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the applicant
-                        and remove their data from our servers.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteConfirm}>Continue</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>{selectedApplicant ? 'Edit Applicant' : 'Add New Applicant'}</DialogTitle>
@@ -293,6 +189,163 @@ export default function ApplicantsTable({ applicants, isAdmin = false }: Applica
             <ApplicantForm applicant={selectedApplicant} onFinished={() => setIsFormOpen(false)} />
         </DialogContent>
     </Dialog>
+
+    <Dialog open={!!detailsApplicant} onOpenChange={(isOpen) => !isOpen && setDetailsApplicant(undefined)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Application Details</DialogTitle>
+            <DialogDescription>
+                Viewing details for application <span className="font-mono font-semibold">{detailsApplicant?.id}</span>
+            </DialogDescription>
+          </DialogHeader>
+          {detailsApplicant && (
+             <div className="space-y-4 pt-4">
+                <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Full Name:</span>
+                    <span className="font-semibold">{detailsApplicant.name}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-semibold">{detailsApplicant.email}</span>
+                </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Submission Date:</span>
+                    <span className="font-semibold">{new Date(detailsApplicant.submissionDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Payment Status:</span>
+                    <Badge variant={getStatusVariant(detailsApplicant.paymentStatus)} className="capitalize">
+                        {detailsApplicant.paymentStatus}
+                    </Badge>
+                </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Lottery Status:</span>
+                     <Badge variant={getLotteryStatusVariant(detailsApplicant.status)} className="capitalize">
+                        {detailsApplicant.status}
+                    </Badge>
+                </div>
+             </div>
+          )}
+        </DialogContent>
+    </Dialog>
+    
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <div className="flex items-center py-4 gap-4">
+            <Input
+                placeholder="Filter by name, email, or ID..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="max-w-sm"
+            />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="ml-auto">
+                    Payment Status <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {['Paid', 'Pending', 'Failed'].map((status) => (
+                    <DropdownMenuCheckboxItem
+                        key={status}
+                        className="capitalize"
+                        checked={statusFilter.has(status)}
+                        onCheckedChange={() => toggleStatusFilter(status)}
+                    >
+                        {status}
+                    </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+            {isAdmin && (
+                <Button onClick={handleAddClick}>Add Applicant</Button>
+            )}
+        </div>
+        <div className="rounded-md border">
+        <Table>
+            <TableHeader>
+            <TableRow>
+                <TableHead>Applicant ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Submission Date</TableHead>
+                <TableHead>Lottery Status</TableHead>
+                <TableHead className="text-right">Payment Status</TableHead>
+                {isAdmin && <TableHead className="w-[50px]"></TableHead>}
+            </TableRow>
+            </TableHeader>
+            <TableBody>
+            {filteredApplicants.length > 0 ? (
+                filteredApplicants.map((applicant) => (
+                <TableRow 
+                    key={applicant.id}
+                    onClick={() => handleRowClick(applicant)}
+                    className={!isAdmin ? 'cursor-pointer' : ''}
+                    >
+                    <TableCell className="font-mono">{applicant.id}</TableCell>
+                    <TableCell className="font-medium">{applicant.name}</TableCell>
+                    <TableCell>{applicant.email}</TableCell>
+                    <TableCell>{new Date(applicant.submissionDate).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                        <Badge variant={getLotteryStatusVariant(applicant.status)} className="capitalize">
+                            {applicant.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                    <Badge variant={getStatusVariant(applicant.paymentStatus)} className="capitalize">
+                        {applicant.paymentStatus}
+                    </Badge>
+                    </TableCell>
+                    {isAdmin && (
+                        <TableCell>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditClick(applicant)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(applicant.id)}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    )}
+                </TableRow>
+                ))
+            ) : (
+                <TableRow>
+                    <TableCell colSpan={isAdmin ? 7 : 6} className="h-48">
+                       <EmptyState />
+                    </TableCell>
+                </TableRow>
+            )}
+            </TableBody>
+        </Table>
+        </div>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the applicant
+                    and remove their data from our servers.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteConfirm}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
