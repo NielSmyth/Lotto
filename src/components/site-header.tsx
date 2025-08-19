@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { getSession } from "@/lib/session";
-import { logout } from "@/lib/auth";
+import { LogoutButton } from "./logout-button";
 
 interface SiteHeaderProps {
   hideNavLinks?: boolean;
@@ -56,11 +56,7 @@ export default async function SiteHeader({ hideNavLinks = false }: SiteHeaderPro
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-               <DropdownMenuItem>
-                  <form action={logout}>
-                    <button type="submit" className="w-full text-left">Logout</button>
-                  </form>
-              </DropdownMenuItem>
+               <LogoutButton />
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
